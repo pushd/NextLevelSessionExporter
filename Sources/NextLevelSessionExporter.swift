@@ -28,7 +28,7 @@ import AVFoundation
 
 /// Session export errors.
 public enum NextLevelSessionExporterError: Error, CustomStringConvertible {
-    case setupFailure
+    case setupFailure(detail: String)
     case readingFailure
     case writingFailure
     case cancelled
@@ -36,8 +36,8 @@ public enum NextLevelSessionExporterError: Error, CustomStringConvertible {
     public var description: String {
         get {
             switch self {
-            case .setupFailure:
-                return "Setup failure"
+            case let .setupFailure(detail):
+                return "Setup failure: \(detail)"
             case .readingFailure:
                 return "Reading failure"
             case .writingFailure:
@@ -194,9 +194,8 @@ extension NextLevelSessionExporter {
         guard let asset = self.asset,
               let outputURL = self.outputURL,
               let outputFileType = self.outputFileType else {
-            print("NextLevelSessionExporter, an asset and output URL are required for encoding")
             DispatchQueue.main.async {
-                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure))
+                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "an asset and output URL are required for encoding")))
             }
             return
         }
@@ -216,26 +215,23 @@ extension NextLevelSessionExporter {
         do {
             self._reader = try AVAssetReader(asset: asset)
         } catch {
-            print("NextLevelSessionExporter, could not setup a reader for the provided asset \(asset)")
             DispatchQueue.main.async {
-                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure))
+                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "could not setup a reader for the provided asset")))
             }
         }
         
         do {
             self._writer = try AVAssetWriter(outputURL: outputURL, fileType: outputFileType)
         } catch {
-            print("NextLevelSessionExporter, could not setup a reader for the provided asset \(asset)")
             DispatchQueue.main.async {
-                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure))
+                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "could not setup a writer for the provided asset")))
             }
         }
 
         // if a video configuration exists, validate it (otherwise, proceed as audio)
         if let _ = self.videoOutputConfiguration, self.validateVideoOutputConfiguration() == false {
-            print("NextLevelSessionExporter, could not setup with the specified video output configuration")
             DispatchQueue.main.async {
-                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure))
+                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "could not setup with the specified video output configuration")))
             }
         }
         
@@ -601,13 +597,13 @@ extension NextLevelSessionExporter {
         }
         
         guard let reader = self._reader else {
-            self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure))
+            self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "reader missing during completion")))
             self._completionHandler = nil
             return
         }
         
         guard let writer = self._writer else {
-            self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure))
+            self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "writer missing during completion")))
             self._completionHandler = nil
             return
         }
