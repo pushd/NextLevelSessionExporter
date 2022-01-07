@@ -59,7 +59,7 @@ public enum NextLevelSessionExporterError: Error, CustomStringConvertible {
             default:
                 break
             }
-
+            return output
         }
     }
 
@@ -216,7 +216,8 @@ extension NextLevelSessionExporter {
               let outputURL = self.outputURL,
               let outputFileType = self.outputFileType else {
             DispatchQueue.main.async {
-                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "an asset and output URL are required for encoding")))
+                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "an asset and output URL are required for encoding",
+                                                                                             error: nil)))
             }
             return
         }
@@ -237,7 +238,8 @@ extension NextLevelSessionExporter {
             self._reader = try AVAssetReader(asset: asset)
         } catch {
             DispatchQueue.main.async {
-                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "could not setup a reader for the provided asset")))
+                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "could not setup a reader for the provided asset",
+                                                                                             error: error)))
             }
         }
         
@@ -245,14 +247,16 @@ extension NextLevelSessionExporter {
             self._writer = try AVAssetWriter(outputURL: outputURL, fileType: outputFileType)
         } catch {
             DispatchQueue.main.async {
-                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "could not setup a writer for the provided asset")))
+                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "could not setup a writer for the provided asset",
+                                                                                             error: error)))
             }
         }
 
         // if a video configuration exists, validate it (otherwise, proceed as audio)
         if let _ = self.videoOutputConfiguration, self.validateVideoOutputConfiguration() == false {
             DispatchQueue.main.async {
-                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "could not setup with the specified video output configuration")))
+                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "could not setup with the specified video output configuration",
+                                                                                             error: nil)))
             }
         }
         
@@ -618,13 +622,15 @@ extension NextLevelSessionExporter {
         }
         
         guard let reader = self._reader else {
-            self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "reader missing during completion")))
+            self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "reader missing during completion",
+                                                                                         error: nil)))
             self._completionHandler = nil
             return
         }
         
         guard let writer = self._writer else {
-            self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "writer missing during completion")))
+            self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "writer missing during completion",
+                                                                                         error: nil)))
             self._completionHandler = nil
             return
         }
