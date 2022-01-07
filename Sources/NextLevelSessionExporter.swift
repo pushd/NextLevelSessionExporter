@@ -212,11 +212,25 @@ extension NextLevelSessionExporter {
     public func export(renderHandler: RenderHandler? = nil,
                        progressHandler: ProgressHandler? = nil,
                        completionHandler: CompletionHandler? = nil) {
-        guard let asset = self.asset,
-              let outputURL = self.outputURL,
-              let outputFileType = self.outputFileType else {
+        guard let asset = self.asset else {
             DispatchQueue.main.async {
-                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "an asset and output URL are required for encoding",
+                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "an asset is required for encoding",
+                                                                                             error: nil)))
+            }
+            return
+        }
+
+        guard let outputURL = self.outputURL else {
+            DispatchQueue.main.async {
+                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "an output URL is required for encoding",
+                                                                                             error: nil)))
+            }
+            return
+        }
+
+        guard let outputFileType = self.outputFileType else {
+            DispatchQueue.main.async {
+                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "an output file type is required for encoding",
                                                                                              error: nil)))
             }
             return
@@ -238,7 +252,7 @@ extension NextLevelSessionExporter {
             self._reader = try AVAssetReader(asset: asset)
         } catch {
             DispatchQueue.main.async {
-                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "could not setup a reader for the provided asset",
+                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "could not setup a reader: \(error.localizedDescription)",
                                                                                              error: error)))
             }
         }
@@ -247,7 +261,7 @@ extension NextLevelSessionExporter {
             self._writer = try AVAssetWriter(outputURL: outputURL, fileType: outputFileType)
         } catch {
             DispatchQueue.main.async {
-                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "could not setup a writer for the provided asset",
+                self._completionHandler?(.failure(NextLevelSessionExporterError.setupFailure(detail: "could not setup a writer : \(error.localizedDescription)",
                                                                                              error: error)))
             }
         }
