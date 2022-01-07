@@ -28,7 +28,7 @@ import AVFoundation
 
 /// Session export errors.
 public enum NextLevelSessionExporterError: Error, CustomStringConvertible {
-    case setupFailure(detail: String)
+    case setupFailure(detail: String, error: Error?)
     case readingFailure
     case writingFailure
     case cancelled
@@ -36,7 +36,7 @@ public enum NextLevelSessionExporterError: Error, CustomStringConvertible {
     public var description: String {
         get {
             switch self {
-            case let .setupFailure(detail):
+            case let .setupFailure(detail, _):
                 return "Setup failure: \(detail)"
             case .readingFailure:
                 return "Reading failure"
@@ -45,6 +45,27 @@ public enum NextLevelSessionExporterError: Error, CustomStringConvertible {
             case .cancelled:
                 return "Cancelled"
             }
+        }
+    }
+
+    public var userInfo: [String: Any] {
+        get {
+            var output: [String: Any] = [NSLocalizedDescriptionKey: self.description]
+            switch self {
+            case let .setupFailure(_, error):
+                if let error = error {
+                    output[NSUnderlyingErrorKey] = error
+                }
+            default:
+                break
+            }
+
+        }
+    }
+
+    public var localizedDescription: String {
+        get {
+            self.description
         }
     }
 }
